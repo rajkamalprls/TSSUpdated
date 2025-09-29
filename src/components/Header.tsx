@@ -1,15 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User, LogOut } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, userRole, signOut } = useAuth();
 
   const navLinks = [
-    { name: "Home", href: "#home" },
-    { name: "About", href: "#about" },
-    { name: "Features", href: "#features" },
-    { name: "Contact", href: "#contact" },
+    { name: "Home", href: "/" },
+    { name: "About", href: "/about" },
+    { name: "Contact", href: "/contact" },
   ];
 
   return (
@@ -41,8 +43,39 @@ const Header = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost">Sign In</Button>
-            <Button variant="gradient">Get Started</Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost">
+                    <User className="h-4 w-4 mr-2" />
+                    {userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : 'User'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {userRole && (
+                    <DropdownMenuItem asChild>
+                      <a href={`/dashboard/${userRole}`}>
+                        Dashboard
+                      </a>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <a href="/auth">Sign In</a>
+                </Button>
+                <Button variant="gradient" asChild>
+                  <a href="/auth">Get Started</a>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -73,8 +106,28 @@ const Header = () => {
                 </a>
               ))}
               <div className="flex flex-col space-y-2 px-4 pt-4 border-t border-border">
-                <Button variant="ghost" className="justify-start">Sign In</Button>
-                <Button variant="gradient" className="justify-start">Get Started</Button>
+                {user ? (
+                  <>
+                    {userRole && (
+                      <Button variant="ghost" className="justify-start" asChild>
+                        <a href={`/dashboard/${userRole}`}>Dashboard</a>
+                      </Button>
+                    )}
+                    <Button variant="ghost" className="justify-start" onClick={signOut}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="ghost" className="justify-start" asChild>
+                      <a href="/auth">Sign In</a>
+                    </Button>
+                    <Button variant="gradient" className="justify-start" asChild>
+                      <a href="/auth">Get Started</a>
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>

@@ -1,7 +1,12 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   GraduationCap, 
   Rocket, 
@@ -11,16 +16,53 @@ import {
   Chrome,
   Shield,
   Zap,
-  CheckCircle
+  CheckCircle,
+  Mail
 } from "lucide-react";
 
 const Auth = () => {
+  const [selectedRole, setSelectedRole] = useState("student");
+  const [isSignUp, setIsSignUp] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { signUp, signIn, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  if (user) {
+    navigate('/');
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (isSignUp) {
+        const { error } = await signUp(email, password, selectedRole, displayName);
+        if (!error) {
+          // Redirect to appropriate dashboard based on role
+          navigate(`/dashboard/${selectedRole}`);
+        }
+      } else {
+        const { error } = await signIn(email, password);
+        if (!error) {
+          navigate('/');
+        }
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const userRoles = [
     {
       id: "student",
-      name: "Student",
+      name: "Students",
+      description: "Find jobs, internships, and courses",
       icon: GraduationCap,
-      description: "From Inter to PhD, all streams",
       features: [
         "AI-powered job & internship recommendations",
         "Personalized learning paths",
@@ -32,9 +74,9 @@ const Auth = () => {
     },
     {
       id: "entrepreneur",
-      name: "Entrepreneur",
+      name: "Entrepreneurs",
+      description: "Launch your startup journey",
       icon: Rocket,
-      description: "Startup founders & aspiring entrepreneurs",
       features: [
         "Startup launchpad resources",
         "Investor & funding connections",
@@ -46,9 +88,9 @@ const Auth = () => {
     },
     {
       id: "college",
-      name: "College",
+      name: "Colleges",
+      description: "Connect with industry partners",
       icon: Building2,
-      description: "Educational institutions",
       features: [
         "Campus placement support",
         "Industry collaboration tools",
@@ -60,9 +102,9 @@ const Auth = () => {
     },
     {
       id: "company",
-      name: "Company",
+      name: "Companies",
+      description: "Hire top talent",
       icon: Briefcase,
-      description: "Hiring managers & HR teams",
       features: [
         "Access to verified talent pool",
         "Campus recruitment tools",
@@ -74,9 +116,9 @@ const Auth = () => {
     },
     {
       id: "incubator",
-      name: "Incubator",
+      name: "Incubators",
+      description: "Support startup ecosystem",
       icon: Users,
-      description: "Accelerators & mentorship programs",
       features: [
         "Startup pipeline management",
         "Mentor matching system",
@@ -97,7 +139,7 @@ const Auth = () => {
     {
       icon: Zap,
       title: "Instant Access",
-      description: "Get started immediately with Google Single Sign-On"
+      description: "Get started immediately with email signup"
     },
     {
       icon: CheckCircle,
@@ -135,7 +177,7 @@ const Auth = () => {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <Tabs defaultValue="student" className="w-full">
+            <Tabs value={selectedRole} onValueChange={setSelectedRole} className="w-full">
               <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-12">
                 {userRoles.map((role) => (
                   <TabsTrigger 
@@ -180,33 +222,66 @@ const Auth = () => {
                     {/* Auth Card */}
                     <Card className="shadow-medium">
                       <CardHeader className="text-center">
-                        <CardTitle className="text-2xl">Sign In as {role.name}</CardTitle>
+                        <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                          <Mail className="h-8 w-8 text-primary" />
+                        </div>
+                        <CardTitle className="text-2xl">
+                          {isSignUp ? `Join as ${role.name.slice(0, -1)}` : 'Welcome Back'}
+                        </CardTitle>
                         <CardDescription>
-                          Use your Google account to get started instantly
+                          {isSignUp ? 'Create your account to get started' : 'Sign in to your account'}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-6">
-                        <Button 
-                          variant="outline" 
-                          size="lg" 
-                          className="w-full h-12 text-lg"
-                        >
-                          <Chrome className="w-5 h-5 mr-3" />
-                          Continue with Google
-                        </Button>
-
-                        <div className="relative">
-                          <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-border" />
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                          {isSignUp && (
+                            <div className="space-y-2">
+                              <Label htmlFor="displayName">Full Name</Label>
+                              <Input
+                                id="displayName"
+                                type="text"
+                                placeholder="Enter your full name"
+                                value={displayName}
+                                onChange={(e) => setDisplayName(e.target.value)}
+                                required={isSignUp}
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              placeholder="Enter your email"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              required
+                            />
                           </div>
-                          <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-background px-2 text-muted-foreground">Or</span>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="password">Password</Label>
+                            <Input
+                              id="password"
+                              type="password"
+                              placeholder="Enter your password"
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              required
+                            />
                           </div>
-                        </div>
-
-                        <Button variant="ghost" size="lg" className="w-full h-12 text-lg">
-                          Create Account with Email
-                        </Button>
+                          
+                          <Button 
+                            type="submit"
+                            variant="gradient" 
+                            size="lg" 
+                            className="w-full h-12 text-lg"
+                            disabled={loading}
+                          >
+                            {loading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}
+                          </Button>
+                        </form>
 
                         <div className="text-center text-sm text-muted-foreground">
                           By continuing, you agree to our{" "}
@@ -217,10 +292,14 @@ const Auth = () => {
 
                         <div className="bg-muted/50 rounded-lg p-4 text-center">
                           <p className="text-sm text-muted-foreground mb-2">
-                            Already have an account?
+                            {isSignUp ? 'Already have an account?' : "Don't have an account?"}
                           </p>
-                          <Button variant="link" className="p-0 h-auto text-primary">
-                            Sign in here
+                          <Button 
+                            variant="link" 
+                            className="p-0 h-auto text-primary"
+                            onClick={() => setIsSignUp(!isSignUp)}
+                          >
+                            {isSignUp ? 'Sign in here' : 'Create account here'}
                           </Button>
                         </div>
                       </CardContent>
