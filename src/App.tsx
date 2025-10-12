@@ -13,6 +13,7 @@ import EntrepreneurDashboard from "./pages/dashboards/EntrepreneurDashboard";
 import CollegeDashboard from "./pages/dashboards/CollegeDashboard";
 import CompanyDashboard from "./pages/dashboards/CompanyDashboard";
 import IncubatorDashboard from "./pages/dashboards/IncubatorDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Header from "@/components/Header";
 
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/dashboard/college" element={<CollegeDashboard />} />
             <Route path="/dashboard/company" element={<CompanyDashboard />} />
             <Route path="/dashboard/incubator" element={<IncubatorDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
